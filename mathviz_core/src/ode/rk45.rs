@@ -78,32 +78,58 @@ pub fn integrate(
         for i in 0..dim {
             tmp[i] = state[i] + h * (1.0 / 5.0) * k1[i];
         }
-        eval_derivative(ivp, &tmp, t + h * (1.0 / 5.0), params, allow_non_finite, &mut k2)?;
+        eval_derivative(
+            ivp,
+            &tmp,
+            t + h * (1.0 / 5.0),
+            params,
+            allow_non_finite,
+            &mut k2,
+        )?;
 
         for i in 0..dim {
             tmp[i] = state[i] + h * ((3.0 / 40.0) * k1[i] + (9.0 / 40.0) * k2[i]);
         }
-        eval_derivative(ivp, &tmp, t + h * (3.0 / 10.0), params, allow_non_finite, &mut k3)?;
+        eval_derivative(
+            ivp,
+            &tmp,
+            t + h * (3.0 / 10.0),
+            params,
+            allow_non_finite,
+            &mut k3,
+        )?;
 
         for i in 0..dim {
             tmp[i] = state[i]
                 + h * ((44.0 / 45.0) * k1[i] - (56.0 / 15.0) * k2[i] + (32.0 / 9.0) * k3[i]);
         }
-        eval_derivative(ivp, &tmp, t + h * (4.0 / 5.0), params, allow_non_finite, &mut k4)?;
+        eval_derivative(
+            ivp,
+            &tmp,
+            t + h * (4.0 / 5.0),
+            params,
+            allow_non_finite,
+            &mut k4,
+        )?;
 
         for i in 0..dim {
             tmp[i] = state[i]
-                + h * ((19372.0 / 6561.0) * k1[i]
-                    - (25360.0 / 2187.0) * k2[i]
+                + h * ((19372.0 / 6561.0) * k1[i] - (25360.0 / 2187.0) * k2[i]
                     + (64448.0 / 6561.0) * k3[i]
                     - (212.0 / 729.0) * k4[i]);
         }
-        eval_derivative(ivp, &tmp, t + h * (8.0 / 9.0), params, allow_non_finite, &mut k5)?;
+        eval_derivative(
+            ivp,
+            &tmp,
+            t + h * (8.0 / 9.0),
+            params,
+            allow_non_finite,
+            &mut k5,
+        )?;
 
         for i in 0..dim {
             tmp[i] = state[i]
-                + h * ((9017.0 / 3168.0) * k1[i]
-                    - (355.0 / 33.0) * k2[i]
+                + h * ((9017.0 / 3168.0) * k1[i] - (355.0 / 33.0) * k2[i]
                     + (46732.0 / 5247.0) * k3[i]
                     + (49.0 / 176.0) * k4[i]
                     - (5103.0 / 18656.0) * k5[i]);
@@ -112,9 +138,7 @@ pub fn integrate(
 
         for i in 0..dim {
             y5[i] = state[i]
-                + h * ((35.0 / 384.0) * k1[i]
-                    + (500.0 / 1113.0) * k3[i]
-                    + (125.0 / 192.0) * k4[i]
+                + h * ((35.0 / 384.0) * k1[i] + (500.0 / 1113.0) * k3[i] + (125.0 / 192.0) * k4[i]
                     - (2187.0 / 6784.0) * k5[i]
                     + (11.0 / 84.0) * k6[i]);
         }

@@ -1,5 +1,6 @@
 README.md
 pyproject.toml
+tests/test_export_tasks.py
 tests/test_expression.py
 tests/test_handlers.py
 tests/test_integration.py

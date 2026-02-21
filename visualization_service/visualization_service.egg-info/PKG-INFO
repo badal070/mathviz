@@ -11,6 +11,10 @@ Requires-Dist: redis>=5.0
 Requires-Dist: msgpack>=1.0
 Requires-Dist: sympy>=1.13
 Requires-Dist: numpy>=1.26
+Requires-Dist: celery>=5.4
+Requires-Dist: pillow>=10.4
+Requires-Dist: imageio>=2.36
+Requires-Dist: imageio-ffmpeg>=0.5
 Requires-Dist: python-multipart>=0.0.9
 Provides-Extra: dev
 Requires-Dist: pytest>=8.3; extra == "dev"

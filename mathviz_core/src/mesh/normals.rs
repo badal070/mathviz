@@ -1,4 +1,10 @@
-pub fn compute_explicit_normals(z_values: &[f64], nx: usize, ny: usize, dx: f64, dy: f64) -> Vec<f32> {
+pub fn compute_explicit_normals(
+    z_values: &[f64],
+    nx: usize,
+    ny: usize,
+    dx: f64,
+    dy: f64,
+) -> Vec<f32> {
     let mut normals = vec![0.0f32; nx * ny * 3];
 
     for iy in 0..ny {

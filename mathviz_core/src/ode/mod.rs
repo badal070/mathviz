@@ -13,7 +13,9 @@ use crate::{
 
 pub fn solve_batch(request: OdeBatchRequest) -> MathvizResult<Vec<TrajectoryBuffer>> {
     if request.ivps.is_empty() {
-        return Err(MathvizError::OdeError("IVP list must not be empty".to_string()));
+        return Err(MathvizError::OdeError(
+            "IVP list must not be empty".to_string(),
+        ));
     }
 
     request
@@ -62,16 +64,12 @@ pub(crate) fn validate_ivp(ivp: &IVPSpec) -> MathvizResult<()> {
     }
     if let Some(h) = ivp.step_size {
         if h <= 0.0 {
-            return Err(MathvizError::OdeError(
-                "step_size must be > 0".to_string(),
-            ));
+            return Err(MathvizError::OdeError("step_size must be > 0".to_string()));
         }
     }
     if let Some(max_steps) = ivp.max_steps {
         if max_steps == 0 {
-            return Err(MathvizError::OdeError(
-                "max_steps must be > 0".to_string(),
-            ));
+            return Err(MathvizError::OdeError("max_steps must be > 0".to_string()));
         }
     }
 

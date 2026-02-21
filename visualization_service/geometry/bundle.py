@@ -9,27 +9,34 @@ from visualization_service.schema.step_descriptor import StepDescriptor
 
 def assemble_bundle(
     step: StepDescriptor,
-    rust_results: dict[str, Any],
+    normalized_layers: list[dict[str, Any]],
     layer_meta: list[LayerMetadata],
     is_delta: bool,
 ) -> StepBundle:
-    layers: list[LayerPayload] = []
+    meta_by_id = {m.layer_id: m for m in layer_meta}
+    default_meta = layer_meta[0] if layer_meta else None
 
-    for meta in layer_meta:
-        geom = rust_results.get(meta.layer_id) or rust_results.get("ok") or rust_results
+    layers: list[LayerPayload] = []
+    for layer in normalized_layers:
+        layer_id = str(layer.get("layer_id", "layer"))
+        meta = meta_by_id.get(layer_id, default_meta)
+
+        source_expression = layer.get("source_expression") or (meta.source_expression if meta else step.hud_equation)
+        color = layer.get("color_hint") or (meta.color_hint if meta else step.render_hints.color)
+        opacity = float(layer.get("opacity", meta.opacity if meta else step.render_hints.opacity))
 
         layers.append(
             LayerPayload(
-                layer_id=meta.layer_id,
-                source_expression=meta.source_expression,
+                layer_id=layer_id,
+                source_expression=source_expression,
                 concept_type=step.concept_type,
-                vertex_buffer=_extract_bytes(geom, "vertex_buffer"),
-                normal_buffer=_extract_bytes(geom, "normal_buffer"),
-                index_buffer=_extract_bytes(geom, "index_buffer"),
-                uv_buffer=_extract_bytes(geom, "uv_buffer"),
-                instance_buffer=_extract_bytes(geom, "instance_buffer"),
-                color_hint=meta.color_hint,
-                opacity=meta.opacity,
+                vertex_buffer=_extract_bytes(layer.get("vertex_buffer")),
+                normal_buffer=_extract_bytes(layer.get("normal_buffer")),
+                index_buffer=_extract_bytes(layer.get("index_buffer"), is_index=True),
+                uv_buffer=_extract_bytes(layer.get("uv_buffer")),
+                instance_buffer=_extract_bytes(layer.get("instance_buffer")),
+                color_hint=color,
+                opacity=opacity,
             )
         )
 
@@ -46,12 +53,7 @@ def assemble_bundle(
     )
 
 
-def _extract_bytes(geom: Any, key: str) -> bytes:
-    if isinstance(geom, dict):
-        value = geom.get(key, b"")
-    else:
-        value = getattr(geom, key, b"")
-
+def _extract_bytes(value: Any, *, is_index: bool = False) -> bytes:
     if value is None:
         return b""
     if isinstance(value, bytes):
@@ -61,7 +63,7 @@ def _extract_bytes(geom: Any, key: str) -> bytes:
     if isinstance(value, list):
         import array
 
-        if key == "index_buffer":
-            return array.array("I", value).tobytes()
-        return array.array("f", value).tobytes()
+        if is_index:
+            return array.array("I", [int(v) for v in value]).tobytes()
+        return array.array("f", [float(v) for v in value]).tobytes()
     return b""

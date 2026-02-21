@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import msgpack
 
 from visualization_service.schema.geometry_wire import StepBundle
@@ -36,3 +38,7 @@ def serialize_bundle(bundle: StepBundle) -> bytes:
         ],
     }
     return msgpack.packb(payload, use_bin_type=True)
+
+
+def deserialize_bundle(bundle_bytes: bytes) -> dict[str, Any]:
+    return msgpack.unpackb(bundle_bytes, raw=False)

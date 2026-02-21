@@ -50,7 +50,9 @@ pub fn process(request: VectorFieldRequest) -> MathvizResult<VectorFieldResponse
     let instance_buffer = arrows::build_instances(&field.points, &vectors)?;
 
     let (divergence, curl) = if request.include_differentials {
-        differential::compute_divergence_and_curl(&field.p, &field.q, &field.r, x_axis, y_axis, z_axis)
+        differential::compute_divergence_and_curl(
+            &field.p, &field.q, &field.r, x_axis, y_axis, z_axis,
+        )
     } else {
         (Vec::new(), Vec::new())
     };
@@ -136,9 +138,21 @@ fn eval_field(input: FieldEvalInput<'_>) -> MathvizResult<FieldEvalOutput> {
                 }
 
                 points.push(Point3 { x, y, z });
-                p.push(eval_ast(input.p_ast, &bindings[..len], input.allow_non_finite)?);
-                q.push(eval_ast(input.q_ast, &bindings[..len], input.allow_non_finite)?);
-                r.push(eval_ast(input.r_ast, &bindings[..len], input.allow_non_finite)?);
+                p.push(eval_ast(
+                    input.p_ast,
+                    &bindings[..len],
+                    input.allow_non_finite,
+                )?);
+                q.push(eval_ast(
+                    input.q_ast,
+                    &bindings[..len],
+                    input.allow_non_finite,
+                )?);
+                r.push(eval_ast(
+                    input.r_ast,
+                    &bindings[..len],
+                    input.allow_non_finite,
+                )?);
             }
         }
     }

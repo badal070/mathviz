@@ -4,13 +4,20 @@ from visualization_service.schema.step_descriptor import AxisSpec, DomainSpec, S
 
 
 def _step(concept: ConceptType) -> StepDescriptor:
+    domain = DomainSpec(x=AxisSpec(min=-1, max=1, steps=128))
+    if concept == ConceptType.IMPLICIT_SURFACE:
+        domain = DomainSpec(
+            x=AxisSpec(min=-1, max=1, steps=128),
+            y=AxisSpec(min=-1, max=1, steps=128),
+            z=AxisSpec(min=-1, max=1, steps=128),
+        )
     return StepDescriptor(
         step_index=1,
         step_label="s",
         concept_type=concept,
         expression="sin(x)",
         narration="n",
-        domain=DomainSpec(x=AxisSpec(min=-1, max=1, steps=128)),
+        domain=domain,
         layer_mode="replace",
         transition="fade_in",
         hud_equation="y=\\sin x",
@@ -30,3 +37,6 @@ def test_handlers_return_spec() -> None:
 
         spec = handler.build_computation_spec(step, {}, parsed)
         assert isinstance(spec.rust_function_name, str)
+        meta = handler.build_layer_metadata(step)
+        assert meta
+        assert all(m.layer_id for m in meta)

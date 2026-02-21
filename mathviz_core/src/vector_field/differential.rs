@@ -62,13 +62,7 @@ struct GridDims {
     nz: usize,
 }
 
-fn diff_axis(
-    field: &[f64],
-    ijk: [usize; 3],
-    dims: GridDims,
-    h: f64,
-    axis: Axis,
-) -> f64 {
+fn diff_axis(field: &[f64], ijk: [usize; 3], dims: GridDims, h: f64, axis: Axis) -> f64 {
     let [ix, iy, iz] = ijk;
     let nx = dims.nx;
     let ny = dims.ny;
@@ -81,7 +75,8 @@ fn diff_axis(
             } else if ix == nx - 1 {
                 (field[index(ix, iy, iz, nx, ny)] - field[index(ix - 1, iy, iz, nx, ny)]) / h
             } else {
-                (field[index(ix + 1, iy, iz, nx, ny)] - field[index(ix - 1, iy, iz, nx, ny)]) / (2.0 * h)
+                (field[index(ix + 1, iy, iz, nx, ny)] - field[index(ix - 1, iy, iz, nx, ny)])
+                    / (2.0 * h)
             }
         }
         Axis::Y => {
@@ -90,7 +85,8 @@ fn diff_axis(
             } else if iy == ny - 1 {
                 (field[index(ix, iy, iz, nx, ny)] - field[index(ix, iy - 1, iz, nx, ny)]) / h
             } else {
-                (field[index(ix, iy + 1, iz, nx, ny)] - field[index(ix, iy - 1, iz, nx, ny)]) / (2.0 * h)
+                (field[index(ix, iy + 1, iz, nx, ny)] - field[index(ix, iy - 1, iz, nx, ny)])
+                    / (2.0 * h)
             }
         }
         Axis::Z => {
@@ -99,7 +95,8 @@ fn diff_axis(
             } else if iz == nz - 1 {
                 (field[index(ix, iy, iz, nx, ny)] - field[index(ix, iy, iz - 1, nx, ny)]) / h
             } else {
-                (field[index(ix, iy, iz + 1, nx, ny)] - field[index(ix, iy, iz - 1, nx, ny)]) / (2.0 * h)
+                (field[index(ix, iy, iz + 1, nx, ny)] - field[index(ix, iy, iz - 1, nx, ny)])
+                    / (2.0 * h)
             }
         }
     }

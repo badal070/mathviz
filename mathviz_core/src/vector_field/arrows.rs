@@ -15,12 +15,7 @@ pub fn unit_arrow_geometry(layer_id: String) -> GeometryBuffer {
     let mut vertices = Vec::with_capacity(8 * 3 + 5 * 3);
     let mut indices = Vec::new();
 
-    let ring = [
-        (r, 0.0),
-        (0.0, r),
-        (-r, 0.0),
-        (0.0, -r),
-    ];
+    let ring = [(r, 0.0), (0.0, r), (-r, 0.0), (0.0, -r)];
 
     for &(x, y) in &ring {
         vertices.extend_from_slice(&[x, y, 0.0]);
@@ -60,7 +55,10 @@ pub fn unit_arrow_geometry(layer_id: String) -> GeometryBuffer {
     }
 }
 
-pub fn build_instances(points: &[Point3], vectors: &[[f64; 3]]) -> MathvizResult<ArrowInstanceBuffer> {
+pub fn build_instances(
+    points: &[Point3],
+    vectors: &[[f64; 3]],
+) -> MathvizResult<ArrowInstanceBuffer> {
     if points.len() != vectors.len() {
         return Err(MathvizError::EvalError(
             "points/vectors size mismatch for arrow instances".to_string(),
@@ -91,17 +89,12 @@ pub fn build_instances(points: &[Point3], vectors: &[[f64; 3]]) -> MathvizResult
             UnitQuaternion::identity()
         } else {
             let target = Unit::new_normalize(dir);
-            UnitQuaternion::rotation_between_axis(&z_axis, &target).unwrap_or_else(UnitQuaternion::identity)
+            UnitQuaternion::rotation_between_axis(&z_axis, &target)
+                .unwrap_or_else(UnitQuaternion::identity)
         };
 
         data.extend_from_slice(&[
-            p.x as f32,
-            p.y as f32,
-            p.z as f32,
-            q.i as f32,
-            q.j as f32,
-            q.k as f32,
-            q.w as f32,
+            p.x as f32, p.y as f32, p.z as f32, q.i as f32, q.j as f32, q.k as f32, q.w as f32,
             scale,
         ]);
     }

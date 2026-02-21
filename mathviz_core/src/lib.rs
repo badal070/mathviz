@@ -1,4 +1,5 @@
 #![allow(clippy::useless_conversion)]
+// PyO3 macro-generated wrappers trigger false-positive useless-conversion lints on PyErr signatures.
 
 pub mod curve;
 mod error;
@@ -21,8 +22,9 @@ use crate::curve::tracer::trace_explicit_curve;
 use crate::error::MathvizError;
 use crate::evaluator::evaluate_batch;
 use crate::types::{
-    BatchRequest, CurveTraceRequest, GeometryBuffer, LinearTransformRequest, LinearTransformResponse,
-    OdeBatchRequest, RiemannRequest, TrajectoryBuffer, VectorFieldRequest, VectorFieldResponse,
+    BatchRequest, CurveTraceRequest, GeometryBuffer, LinearTransformRequest,
+    LinearTransformResponse, OdeBatchRequest, RiemannRequest, TrajectoryBuffer, VectorFieldRequest,
+    VectorFieldResponse,
 };
 
 static RAYON_INIT: OnceLock<usize> = OnceLock::new();
@@ -40,9 +42,10 @@ impl From<MathvizError> for PyErr {
     }
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(num_threads)")]
-fn configure(num_threads: usize) -> PyResult<bool> {
+fn configure(num_threads: usize) -> Result<bool, PyErr> {
     if num_threads == 0 {
         return Err(PyValueError::new_err("num_threads must be > 0"));
     }
@@ -60,11 +63,12 @@ fn configure(num_threads: usize) -> PyResult<bool> {
     Ok(true)
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(request_json)")]
-fn batch_evaluate(py: Python<'_>, request_json: &str) -> PyResult<PyObject> {
-    let request: BatchRequest =
-        serde_json::from_str(request_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn batch_evaluate(py: Python<'_>, request_json: &str) -> Result<PyObject, PyErr> {
+    let request: BatchRequest = serde_json::from_str(request_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
 
     let result = py.allow_threads(|| evaluate_batch(request));
     let py_result = PyDict::new_bound(py);
@@ -91,24 +95,27 @@ fn batch_evaluate(py: Python<'_>, request_json: &str) -> PyResult<PyObject> {
     Ok(py_result.into_py(py))
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(request_json)")]
-fn trace_curve(py: Python<'_>, request_json: &str) -> PyResult<PyObject> {
-    let request: CurveTraceRequest =
-        serde_json::from_str(request_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn trace_curve(py: Python<'_>, request_json: &str) -> Result<PyObject, PyErr> {
+    let request: CurveTraceRequest = serde_json::from_str(request_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
 
     let response = py.allow_threads(|| trace_explicit_curve(request))?;
     let out = PyDict::new_bound(py);
     out.set_item("geometry", geometry_to_pydict(py, &response.geometry)?)?;
     out.set_item("arc_length", response.arc_length.into_pyarray_bound(py))?;
+    out.set_item("cusp_indices", response.cusp_indices.into_pyarray_bound(py))?;
     Ok(out.into_py(py))
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(ivps_json)")]
-fn solve_ode_batch(py: Python<'_>, ivps_json: &str) -> PyResult<PyObject> {
-    let request: OdeBatchRequest =
-        serde_json::from_str(ivps_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn solve_ode_batch(py: Python<'_>, ivps_json: &str) -> Result<PyObject, PyErr> {
+    let request: OdeBatchRequest = serde_json::from_str(ivps_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
     let trajectories = py.allow_threads(|| ode::solve_batch(request))?;
 
     let out = pyo3::types::PyList::empty_bound(py);
@@ -118,31 +125,38 @@ fn solve_ode_batch(py: Python<'_>, ivps_json: &str) -> PyResult<PyObject> {
     Ok(out.into_py(py))
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(request_json)")]
-fn process_vector_field(py: Python<'_>, request_json: &str) -> PyResult<PyObject> {
-    let request: VectorFieldRequest =
-        serde_json::from_str(request_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn process_vector_field(py: Python<'_>, request_json: &str) -> Result<PyObject, PyErr> {
+    let request: VectorFieldRequest = serde_json::from_str(request_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
     let response = py.allow_threads(|| vector_field::process(request))?;
     Ok(vector_field_to_pydict(py, &response)?.into_py(py))
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(request_json)")]
-fn generate_riemann(py: Python<'_>, request_json: &str) -> PyResult<PyObject> {
-    let request: RiemannRequest =
-        serde_json::from_str(request_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn generate_riemann(py: Python<'_>, request_json: &str) -> Result<PyObject, PyErr> {
+    let request: RiemannRequest = serde_json::from_str(request_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
     let geometry = py.allow_threads(|| riemann::generate(request))?;
     Ok(geometry_to_pydict(py, &geometry)?.into_py(py))
 }
 
+#[allow(clippy::useless_conversion)]
 #[pyfunction]
 #[pyo3(text_signature = "(matrix_json, domain_json)")]
-fn visualize_linear_transform(py: Python<'_>, matrix_json: &str, domain_json: &str) -> PyResult<PyObject> {
-    let matrix: Vec<Vec<f64>> =
-        serde_json::from_str(matrix_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
-    let domain: crate::types::DomainSpec =
-        serde_json::from_str(domain_json).map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+fn visualize_linear_transform(
+    py: Python<'_>,
+    matrix_json: &str,
+    domain_json: &str,
+) -> Result<PyObject, PyErr> {
+    let matrix: Vec<Vec<f64>> = serde_json::from_str(matrix_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
+    let domain: crate::types::DomainSpec = serde_json::from_str(domain_json)
+        .map_err(|e| MathvizError::DeserializeError(e.to_string()))?;
 
     let request = LinearTransformRequest {
         matrix,
@@ -154,7 +168,10 @@ fn visualize_linear_transform(py: Python<'_>, matrix_json: &str, domain_json: &s
     Ok(linear_transform_to_pydict(py, &response)?.into_py(py))
 }
 
-fn geometry_to_pydict<'py>(py: Python<'py>, geometry: &GeometryBuffer) -> PyResult<Bound<'py, PyDict>> {
+fn geometry_to_pydict<'py>(
+    py: Python<'py>,
+    geometry: &GeometryBuffer,
+) -> PyResult<Bound<'py, PyDict>> {
     let dict = PyDict::new_bound(py);
     dict.set_item(
         "vertex_buffer",
@@ -168,13 +185,19 @@ fn geometry_to_pydict<'py>(py: Python<'py>, geometry: &GeometryBuffer) -> PyResu
         "index_buffer",
         geometry.index_buffer.clone().into_pyarray_bound(py),
     )?;
-    dict.set_item("uv_buffer", geometry.uv_buffer.clone().into_pyarray_bound(py))?;
+    dict.set_item(
+        "uv_buffer",
+        geometry.uv_buffer.clone().into_pyarray_bound(py),
+    )?;
     dict.set_item("layer_id", geometry.layer_id.clone())?;
     dict.set_item("is_delta", geometry.is_delta)?;
     Ok(dict)
 }
 
-fn trajectory_to_pydict<'py>(py: Python<'py>, trajectory: &TrajectoryBuffer) -> PyResult<Bound<'py, PyDict>> {
+fn trajectory_to_pydict<'py>(
+    py: Python<'py>,
+    trajectory: &TrajectoryBuffer,
+) -> PyResult<Bound<'py, PyDict>> {
     let dict = PyDict::new_bound(py);
     dict.set_item("state", trajectory.state.clone().into_pyarray_bound(py))?;
     dict.set_item("times", trajectory.times.clone().into_pyarray_bound(py))?;
@@ -184,14 +207,20 @@ fn trajectory_to_pydict<'py>(py: Python<'py>, trajectory: &TrajectoryBuffer) -> 
     Ok(dict)
 }
 
-fn vector_field_to_pydict<'py>(py: Python<'py>, response: &VectorFieldResponse) -> PyResult<Bound<'py, PyDict>> {
+fn vector_field_to_pydict<'py>(
+    py: Python<'py>,
+    response: &VectorFieldResponse,
+) -> PyResult<Bound<'py, PyDict>> {
     let dict = PyDict::new_bound(py);
     dict.set_item("unit_arrow", geometry_to_pydict(py, &response.unit_arrow)?)?;
     dict.set_item(
         "instance_buffer",
         response.instance_buffer.data.clone().into_pyarray_bound(py),
     )?;
-    dict.set_item("divergence", response.divergence.clone().into_pyarray_bound(py))?;
+    dict.set_item(
+        "divergence",
+        response.divergence.clone().into_pyarray_bound(py),
+    )?;
     dict.set_item("curl", response.curl.clone().into_pyarray_bound(py))?;
 
     let streamlines = pyo3::types::PyList::empty_bound(py);

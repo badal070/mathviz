@@ -109,7 +109,8 @@ fn evaluate_entry(entry: &BatchEntry, ctx: &EvalContext<'_>) -> MathvizResult<Ge
             let x_axis = domain.x.as_ref().ok_or_else(|| {
                 MathvizError::DomainViolation("curve requires x axis".to_string())
             })?;
-            let vertices = eval_curve_vertices(&entry.ast, x_axis, ctx.parameters, ctx.allow_non_finite)?;
+            let vertices =
+                eval_curve_vertices(&entry.ast, x_axis, ctx.parameters, ctx.allow_non_finite)?;
             let indices = (0..x_axis.steps as u32).collect::<Vec<u32>>();
             Ok(GeometryBuffer {
                 vertex_buffer: vertices,
@@ -164,9 +165,8 @@ fn eval_surface_field(
 ) -> MathvizResult<Vec<f64>> {
     let mut out = vec![0.0f64; x_axis.steps * y_axis.steps];
 
-    out.par_chunks_mut(x_axis.steps)
-        .enumerate()
-        .try_for_each(|(iy, row)| -> MathvizResult<()> {
+    out.par_chunks_mut(x_axis.steps).enumerate().try_for_each(
+        |(iy, row)| -> MathvizResult<()> {
             let y = y_axis.value_at(iy);
             for (ix, value) in row.iter_mut().enumerate() {
                 let x = x_axis.value_at(ix);
@@ -188,7 +188,8 @@ fn eval_surface_field(
                 *value = eval_ast(ast, &stack_bindings[..len], allow_non_finite)?;
             }
             Ok(())
-        })?;
+        },
+    )?;
 
     Ok(out)
 }

@@ -11,7 +11,7 @@ from visualization_service.schema.step_descriptor import StepDescriptor
 class StepQueueEntry:
     step_index: int
     computation_spec: ComputationSpec
-    layer_metadata: LayerMetadata
+    layer_metadata: list[LayerMetadata]
     step_descriptor: StepDescriptor
     bundle_cache_key: str
     status: Literal["pending", "computing", "ready", "error"] = "pending"

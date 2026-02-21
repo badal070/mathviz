@@ -28,7 +28,13 @@ fn eigen_2x2_layers(matrix: &[Vec<f64>], prefix: &str) -> MathvizResult<Vec<Geom
     let disc = tr * tr - 4.0 * det;
 
     if disc < 0.0 {
-        return Ok(Vec::new());
+        return Ok(vec![rotation_scale_indicator_2d(
+            a,
+            b,
+            c,
+            d,
+            format!("{prefix}_eigen_complex"),
+        )]);
     }
 
     let sqrt_disc = disc.sqrt();
@@ -46,8 +52,15 @@ fn eigen_2x2_layers(matrix: &[Vec<f64>], prefix: &str) -> MathvizResult<Vec<Geom
 
 fn eigen_3x3_layers(matrix: &[Vec<f64>], prefix: &str) -> MathvizResult<Vec<GeometryBuffer>> {
     let mut a = Matrix3::new(
-        matrix[0][0], matrix[0][1], matrix[0][2], matrix[1][0], matrix[1][1], matrix[1][2], matrix[2][0],
-        matrix[2][1], matrix[2][2],
+        matrix[0][0],
+        matrix[0][1],
+        matrix[0][2],
+        matrix[1][0],
+        matrix[1][1],
+        matrix[1][2],
+        matrix[2][0],
+        matrix[2][1],
+        matrix[2][2],
     );
     let mut q_total = Matrix3::identity();
 
@@ -63,7 +76,11 @@ fn eigen_3x3_layers(matrix: &[Vec<f64>], prefix: &str) -> MathvizResult<Vec<Geom
     let mut out = Vec::with_capacity(3);
     for i in 0..3 {
         let vec = Vector3::new(q_total[(0, i)], q_total[(1, i)], q_total[(2, i)]);
-        out.push(arrow_layer_3d(vec, lambdas[i], format!("{prefix}_eigen_{i}")));
+        out.push(arrow_layer_3d(
+            vec,
+            lambdas[i],
+            format!("{prefix}_eigen_{i}"),
+        ));
     }
     Ok(out)
 }
@@ -103,15 +120,54 @@ fn arrow_layer_2d(v: Vector2<f64>, lambda: f64, layer_id: String) -> GeometryBuf
 
 fn arrow_layer_3d(v: Vector3<f64>, lambda: f64, layer_id: String) -> GeometryBuffer {
     let n = v.norm();
-    let dir = if n <= 1e-12 { Vector3::new(1.0, 0.0, 0.0) } else { v / n };
+    let dir = if n <= 1e-12 {
+        Vector3::new(1.0, 0.0, 0.0)
+    } else {
+        v / n
+    };
     let scale = lambda.abs().max(0.1);
     let p0 = -dir * scale;
     let p1 = dir * scale;
 
     GeometryBuffer {
-        vertex_buffer: vec![p0.x as f32, p0.y as f32, p0.z as f32, p1.x as f32, p1.y as f32, p1.z as f32],
+        vertex_buffer: vec![
+            p0.x as f32,
+            p0.y as f32,
+            p0.z as f32,
+            p1.x as f32,
+            p1.y as f32,
+            p1.z as f32,
+        ],
         normal_buffer: Vec::new(),
         index_buffer: vec![0, 1],
+        uv_buffer: Vec::new(),
+        layer_id,
+        is_delta: false,
+    }
+}
+
+fn rotation_scale_indicator_2d(a: f64, b: f64, c: f64, d: f64, layer_id: String) -> GeometryBuffer {
+    let m = nalgebra::Matrix2::new(a, b, c, d);
+    let samples = 96usize;
+
+    let mut vertices = Vec::with_capacity(samples * 3);
+    let mut indices = Vec::with_capacity(samples + 2);
+
+    for i in 0..samples {
+        let theta = (i as f64 / samples as f64) * std::f64::consts::TAU;
+        let p = Vector2::new(theta.cos(), theta.sin());
+        let q = m * p;
+        vertices.extend_from_slice(&[q.x as f32, q.y as f32, 0.0]);
+        indices.push(i as u32);
+    }
+    // Close the loop and terminate line-strip segment.
+    indices.push(0);
+    indices.push(u32::MAX);
+
+    GeometryBuffer {
+        vertex_buffer: vertices,
+        normal_buffer: Vec::new(),
+        index_buffer: indices,
         uv_buffer: Vec::new(),
         layer_id,
         is_delta: false,

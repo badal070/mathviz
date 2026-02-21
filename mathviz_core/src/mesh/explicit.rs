@@ -17,7 +17,8 @@ pub fn build_explicit_surface(
     if z_values.len() != expected {
         return Err(MathvizError::MeshError(format!(
             "z field size mismatch: got {}, expected {}",
-            z_values.len(), expected
+            z_values.len(),
+            expected
         )));
     }
 
@@ -76,7 +77,10 @@ fn tri_is_valid(vertices: &[f32], i0: u32, i1: u32, i2: u32) -> bool {
     let v1 = &vertices[(i1 as usize) * 3..(i1 as usize) * 3 + 3];
     let v2 = &vertices[(i2 as usize) * 3..(i2 as usize) * 3 + 3];
 
-    if !(v0.iter().all(|v| v.is_finite()) && v1.iter().all(|v| v.is_finite()) && v2.iter().all(|v| v.is_finite())) {
+    if !(v0.iter().all(|v| v.is_finite())
+        && v1.iter().all(|v| v.is_finite())
+        && v2.iter().all(|v| v.is_finite()))
+    {
         return false;
     }
 

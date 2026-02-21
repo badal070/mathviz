@@ -34,5 +34,5 @@ class ConceptHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def build_layer_metadata(self, step: StepDescriptor) -> LayerMetadata:
+    def build_layer_metadata(self, step: StepDescriptor) -> list[LayerMetadata]:
         raise NotImplementedError

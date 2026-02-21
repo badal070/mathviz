@@ -7,7 +7,11 @@ use crate::{
 const MAX_AST_DEPTH: usize = 64;
 
 #[inline(always)]
-pub fn eval_ast(node: &ASTNode, bindings: &[(&str, f64)], allow_non_finite: bool) -> MathvizResult<f64> {
+pub fn eval_ast(
+    node: &ASTNode,
+    bindings: &[(&str, f64)],
+    allow_non_finite: bool,
+) -> MathvizResult<f64> {
     eval_ast_inner(node, bindings, allow_non_finite, 0)
 }
 
@@ -26,9 +30,8 @@ fn eval_ast_inner(
 
     let value = match node {
         ASTNode::Literal { value } => *value,
-        ASTNode::Variable { name } => lookup_binding(name, bindings).ok_or_else(|| {
-            MathvizError::EvalError(format!("undefined symbol: {name}"))
-        })?,
+        ASTNode::Variable { name } => lookup_binding(name, bindings)
+            .ok_or_else(|| MathvizError::EvalError(format!("undefined symbol: {name}")))?,
         ASTNode::Unary { op, child } => {
             let v = eval_ast_inner(child, bindings, allow_non_finite, depth + 1)?;
             match op {
@@ -91,7 +94,9 @@ fn eval_ast_inner(
     };
 
     if !allow_non_finite && !value.is_finite() {
-        return Err(MathvizError::EvalError("encountered non-finite value".to_string()));
+        return Err(MathvizError::EvalError(
+            "encountered non-finite value".to_string(),
+        ));
     }
 
     Ok(value)

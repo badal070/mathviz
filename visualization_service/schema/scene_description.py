@@ -3,13 +3,15 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from visualization_service.schema.enums import CoordinateSystem
+from visualization_service.schema.enums import CoordinateSystem, LayerMode
 from visualization_service.schema.step_descriptor import DomainSpec, RenderHints, StepDescriptor
 
 
 class SceneDescription(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     scene_id: UUID
     version: str = "2.0"
     session_id: UUID
@@ -31,20 +33,9 @@ class SceneDescription(BaseModel):
         for step in self.steps:
             if step.step_index != expected:
                 raise ValueError("step indices must be contiguous and start at 1")
-            if step.domain is not None:
-                _validate_domain(step.domain)
             expected += 1
 
-        if self.global_domain is not None:
-            _validate_domain(self.global_domain)
+        if self.steps and self.steps[0].layer_mode == LayerMode.HIGHLIGHT:
+            raise ValueError("step 1 cannot use highlight layer_mode")
 
         return self
-
-
-def _validate_domain(domain: DomainSpec) -> None:
-    for axis_name in ("x", "y", "z", "t"):
-        axis = getattr(domain, axis_name)
-        if axis is None:
-            continue
-        if not axis.min < axis.max:
-            raise ValueError(f"{axis_name}.min must be < {axis_name}.max")

@@ -47,8 +47,10 @@ pub fn generate(request: RiemannRequest) -> MathvizResult<GeometryBuffer> {
         let f = match method {
             PartitionMethod::Trapezoid => 0.5 * (f0 + f1),
             _ => {
-                if matches!(method, PartitionMethod::Left | PartitionMethod::Right | PartitionMethod::Midpoint)
-                {
+                if matches!(
+                    method,
+                    PartitionMethod::Left | PartitionMethod::Right | PartitionMethod::Midpoint
+                ) {
                     eval_scalar(
                         &request.ast,
                         x_rep,
@@ -64,23 +66,11 @@ pub fn generate(request: RiemannRequest) -> MathvizResult<GeometryBuffer> {
         let base = (vertices.len() / 3) as u32;
 
         vertices.extend_from_slice(&[
-            x0 as f32,
-            0.0,
-            0.0,
-            x1 as f32,
-            0.0,
-            0.0,
-            x1 as f32,
-            f as f32,
-            0.0,
-            x0 as f32,
-            f as f32,
-            0.0,
+            x0 as f32, 0.0, 0.0, x1 as f32, 0.0, 0.0, x1 as f32, f as f32, 0.0, x0 as f32,
+            f as f32, 0.0,
         ]);
 
-        normals.extend_from_slice(&[
-            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-        ]);
+        normals.extend_from_slice(&[0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]);
 
         indices.extend_from_slice(&[base, base + 1, base + 2, base, base + 2, base + 3]);
     }

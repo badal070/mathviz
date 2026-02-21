@@ -3,9 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 import sympy
-from sympy.parsing.sympy_parser import parse_expr
+from sympy.parsing.sympy_parser import (
+    convert_xor,
+    implicit_multiplication_application,
+    parse_expr,
+    standard_transformations,
+)
 
 from visualization_service.expression.symbols import SymbolRegistry
+
+
+TRANSFORMS = standard_transformations + (implicit_multiplication_application, convert_xor)
 
 
 class ExpressionParseError(ValueError):
@@ -14,7 +22,7 @@ class ExpressionParseError(ValueError):
 
 def parse_expression(expr_str: str, registry: SymbolRegistry) -> dict[str, Any]:
     try:
-        expr = parse_expr(expr_str, evaluate=False)
+        expr = parse_expr(expr_str, transformations=TRANSFORMS, evaluate=False)
     except Exception as exc:  # noqa: BLE001
         raise ExpressionParseError(f"Failed to parse expression '{expr_str}': {exc}") from exc
 
@@ -25,6 +33,10 @@ def parse_expression(expr_str: str, registry: SymbolRegistry) -> dict[str, Any]:
 
     for name, value in registry.constants.items():
         expr = expr.subs(sympy.Symbol(name), sympy.Float(value))
+
+    # Also normalize common SymPy constants.
+    expr = expr.subs(sympy.E, sympy.Float(registry.constants.get("e", float(sympy.E))))
+    expr = expr.subs(sympy.pi, sympy.Float(registry.constants.get("pi", float(sympy.pi))))
 
     return _to_ast(expr)
 

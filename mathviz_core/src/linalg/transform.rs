@@ -53,10 +53,22 @@ fn generate_2d_layers(
 
         let p0 = Vector2::new(x, y0);
         let p1 = Vector2::new(x, y1);
-        push_line_2d(&mut before_vertices, &mut before_indices, &mut before_idx, p0, p1);
+        push_line_2d(
+            &mut before_vertices,
+            &mut before_indices,
+            &mut before_idx,
+            p0,
+            p1,
+        );
         let tp0 = m * p0;
         let tp1 = m * p1;
-        push_line_2d(&mut after_vertices, &mut after_indices, &mut after_idx, tp0, tp1);
+        push_line_2d(
+            &mut after_vertices,
+            &mut after_indices,
+            &mut after_idx,
+            tp0,
+            tp1,
+        );
     }
 
     for i in 0..n {
@@ -67,10 +79,22 @@ fn generate_2d_layers(
 
         let p0 = Vector2::new(x0, y);
         let p1 = Vector2::new(x1, y);
-        push_line_2d(&mut before_vertices, &mut before_indices, &mut before_idx, p0, p1);
+        push_line_2d(
+            &mut before_vertices,
+            &mut before_indices,
+            &mut before_idx,
+            p0,
+            p1,
+        );
         let tp0 = m * p0;
         let tp1 = m * p1;
-        push_line_2d(&mut after_vertices, &mut after_indices, &mut after_idx, tp0, tp1);
+        push_line_2d(
+            &mut after_vertices,
+            &mut after_indices,
+            &mut after_idx,
+            tp0,
+            tp1,
+        );
     }
 
     Ok((
@@ -102,8 +126,15 @@ fn generate_3d_layers(
     prefix: &str,
 ) -> MathvizResult<(GeometryBuffer, GeometryBuffer)> {
     let m = Matrix3::new(
-        matrix[0][0], matrix[0][1], matrix[0][2], matrix[1][0], matrix[1][1], matrix[1][2], matrix[2][0],
-        matrix[2][1], matrix[2][2],
+        matrix[0][0],
+        matrix[0][1],
+        matrix[0][2],
+        matrix[1][0],
+        matrix[1][1],
+        matrix[1][2],
+        matrix[2][0],
+        matrix[2][1],
+        matrix[2][2],
     );
     let n = density.max(2);
 
@@ -115,6 +146,7 @@ fn generate_3d_layers(
     let mut before_idx = 0u32;
     let mut after_idx = 0u32;
 
+    // Lines parallel to x-axis.
     for iy in 0..n {
         let ty = iy as f64 / (n - 1) as f64;
         let y = y_axis.min + (y_axis.max - y_axis.min) * ty;
@@ -123,7 +155,65 @@ fn generate_3d_layers(
             let z = z_axis.min + (z_axis.max - z_axis.min) * tz;
             let p0 = Vector3::new(x_axis.min, y, z);
             let p1 = Vector3::new(x_axis.max, y, z);
-            push_line_3d(&mut before_vertices, &mut before_indices, &mut before_idx, p0, p1);
+            push_line_3d(
+                &mut before_vertices,
+                &mut before_indices,
+                &mut before_idx,
+                p0,
+                p1,
+            );
+            push_line_3d(
+                &mut after_vertices,
+                &mut after_indices,
+                &mut after_idx,
+                m * p0,
+                m * p1,
+            );
+        }
+    }
+
+    // Lines parallel to y-axis.
+    for ix in 0..n {
+        let tx = ix as f64 / (n - 1) as f64;
+        let x = x_axis.min + (x_axis.max - x_axis.min) * tx;
+        for iz in 0..n {
+            let tz = iz as f64 / (n - 1) as f64;
+            let z = z_axis.min + (z_axis.max - z_axis.min) * tz;
+            let p0 = Vector3::new(x, y_axis.min, z);
+            let p1 = Vector3::new(x, y_axis.max, z);
+            push_line_3d(
+                &mut before_vertices,
+                &mut before_indices,
+                &mut before_idx,
+                p0,
+                p1,
+            );
+            push_line_3d(
+                &mut after_vertices,
+                &mut after_indices,
+                &mut after_idx,
+                m * p0,
+                m * p1,
+            );
+        }
+    }
+
+    // Lines parallel to z-axis.
+    for ix in 0..n {
+        let tx = ix as f64 / (n - 1) as f64;
+        let x = x_axis.min + (x_axis.max - x_axis.min) * tx;
+        for iy in 0..n {
+            let ty = iy as f64 / (n - 1) as f64;
+            let y = y_axis.min + (y_axis.max - y_axis.min) * ty;
+            let p0 = Vector3::new(x, y, z_axis.min);
+            let p1 = Vector3::new(x, y, z_axis.max);
+            push_line_3d(
+                &mut before_vertices,
+                &mut before_indices,
+                &mut before_idx,
+                p0,
+                p1,
+            );
             push_line_3d(
                 &mut after_vertices,
                 &mut after_indices,
@@ -154,16 +244,30 @@ fn generate_3d_layers(
     ))
 }
 
-fn push_line_2d(vertices: &mut Vec<f32>, indices: &mut Vec<u32>, idx: &mut u32, a: Vector2<f64>, b: Vector2<f64>) {
+fn push_line_2d(
+    vertices: &mut Vec<f32>,
+    indices: &mut Vec<u32>,
+    idx: &mut u32,
+    a: Vector2<f64>,
+    b: Vector2<f64>,
+) {
     let base = *idx;
     vertices.extend_from_slice(&[a.x as f32, a.y as f32, 0.0, b.x as f32, b.y as f32, 0.0]);
     indices.extend_from_slice(&[base, base + 1, u32::MAX]);
     *idx += 2;
 }
 
-fn push_line_3d(vertices: &mut Vec<f32>, indices: &mut Vec<u32>, idx: &mut u32, a: Vector3<f64>, b: Vector3<f64>) {
+fn push_line_3d(
+    vertices: &mut Vec<f32>,
+    indices: &mut Vec<u32>,
+    idx: &mut u32,
+    a: Vector3<f64>,
+    b: Vector3<f64>,
+) {
     let base = *idx;
-    vertices.extend_from_slice(&[a.x as f32, a.y as f32, a.z as f32, b.x as f32, b.y as f32, b.z as f32]);
+    vertices.extend_from_slice(&[
+        a.x as f32, a.y as f32, a.z as f32, b.x as f32, b.y as f32, b.z as f32,
+    ]);
     indices.extend_from_slice(&[base, base + 1, u32::MAX]);
     *idx += 2;
 }

@@ -52,8 +52,12 @@ pub enum NaryOp {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ASTNode {
-    Literal { value: f64 },
-    Variable { name: String },
+    Literal {
+        value: f64,
+    },
+    Variable {
+        name: String,
+    },
     Unary {
         op: UnaryOp,
         child: Box<ASTNode>,
@@ -196,9 +200,21 @@ pub type BatchResult = BTreeMap<String, BatchOutcome>;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CurveTraceRequest {
     pub ast: ASTNode,
+    #[serde(default)]
+    pub x_ast: Option<ASTNode>,
+    #[serde(default)]
+    pub y_ast: Option<ASTNode>,
+    #[serde(default)]
+    pub z_ast: Option<ASTNode>,
     pub domain: DomainSpec,
     #[serde(default)]
     pub parameters: BTreeMap<String, f64>,
+    #[serde(default)]
+    pub parameter_name: Option<String>,
+    #[serde(default)]
+    pub allow_non_finite: bool,
+    #[serde(default)]
+    pub layer_id: String,
     #[serde(default)]
     pub discontinuity_threshold_factor: f64,
 }
@@ -217,6 +233,7 @@ impl CurveTraceRequest {
 pub struct CurveTraceResponse {
     pub geometry: GeometryBuffer,
     pub arc_length: Vec<f32>,
+    pub cusp_indices: Vec<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
