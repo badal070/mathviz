@@ -1,0 +1,2 @@
+hashbrown::HashMap<std::string::String, std::result::Result<types::GeometryBuffer, error::MathvizError>>
+hashbrown::HashMap<std::string::String, std::result::Result<types::GeometryBuffer, error::MathvizError>>: rayon::iter::FromParallelIterator<(std::string::String, std::result::Result<types::GeometryBuffer, error::MathvizError>)>

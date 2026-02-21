@@ -1,0 +1,1 @@
+from visualization_service.handlers.function_handler import FunctionHandler as StatisticalHandler
